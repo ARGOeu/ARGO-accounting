@@ -61,7 +61,7 @@ public class AccessControlRepository implements PanacheMongoRepository<RoleAcces
         var optional =  find("who = ?1 and collection = ?2 and entity = ?3", who, collection, entity).stream().findAny();
 
         return optional;
-    }
+   }
 
     /**
      * Executes a query to retrieve all Access Controls that have been created for the given entity id.

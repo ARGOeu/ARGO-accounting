@@ -137,6 +137,34 @@ public class HierarchicalRelationRepository implements PanacheMongoRepositoryBas
         return projectionQuery;
     }
 
+
+    public List<InstallationProjection>  findInstallationsOfProjects(List<String> projects, String from, String localField, String foreignField, String as){
+
+        Bson eq = Aggregates.match(Filters.in("project", projects));
+
+        Bson lookup = Aggregates.lookup(from, localField, foreignField, as);
+
+
+     return  installationRepository
+                .getMongoCollection()
+                .aggregate(List
+                        .of(lookup, eq), InstallationProjection.class).into(new ArrayList<>());
+
+    }
+
+    public List<InstallationProjection> findInstallationsOfProviders(List<String>providers, String from, String localField, String foreignField, String as){
+
+        Bson eq = Aggregates.match(Filters.in("organisation", providers));
+
+        Bson lookup = Aggregates.lookup(from, localField, foreignField, as);
+
+
+        return installationRepository
+                .getMongoCollection()
+                .aggregate(List
+                        .of(lookup, eq), InstallationProjection.class).into(new ArrayList<>());
+    }
+
     public ProjectionQuery<InstallationProjection> findInstallationsByProvider(String project, String provider, String from, String localField, String foreignField, String as, int page, int size, Class<InstallationProjection> projection){
 
         Bson eq = Aggregates.match(Filters.and(Filters.eq("project", project), Filters.eq("organisation", provider)));
@@ -162,6 +190,22 @@ public class HierarchicalRelationRepository implements PanacheMongoRepositoryBas
         projectionQuery.count = count == null ? 0L : Long.parseLong(count.get("count").toString());
 
         return projectionQuery;
+    }
+
+
+    public List<InstallationProjection> findInstallationsByProvider(String project, String provider, String from, String localField, String foreignField, String as){
+
+        Bson eq = Aggregates.match(Filters.and(Filters.eq("project", project), Filters.eq("organisation", provider)));
+
+        Bson lookup = Aggregates.lookup(from, localField, foreignField, as);
+
+
+        return installationRepository
+                .getMongoCollection()
+                .aggregate(List
+                        .of(lookup, eq), InstallationProjection.class).into(new ArrayList<>());
+
+
     }
 
     public ProjectionQuery<MetricProjection> findByExternalId(final String externalId, int page, int size) {

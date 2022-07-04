@@ -20,6 +20,7 @@ import javax.ws.rs.NotFoundException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * This service exposes business logic, which uses the {@link MetricRepository}.
@@ -147,7 +148,7 @@ public class MetricService {
         Bson query=queryParser.parseFile(json);
 
         var list = metricRepository.search(query);
-        return  MetricMapper.INSTANCE.metricsToResponse( list);
+        return  MetricMapper.INSTANCE.metricsToResponse( list.stream().collect(Collectors.toList()));
     }
 
 }

@@ -4,9 +4,11 @@ import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.CollationStrength;
 import io.quarkus.mongodb.panache.PanacheMongoRepository;
 import org.accounting.system.entities.installation.Installation;
+import org.accounting.system.entities.projections.HierarchicalRelationProjection;
 import org.accounting.system.exceptions.ConflictException;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.util.List;
 
 /**
  * {@link InstallationRepository This repository} encapsulates the logic required to access
@@ -32,5 +34,18 @@ public class InstallationRepository extends InstallationModulator {
                 .findAny();
 
         optional.ifPresent(storedInstallation -> {throw new ConflictException("There is an Installation with infrastructure "+infrastructure+" and installation "+installation+". Its id is "+storedInstallation.getId().toString());});
+    }
+
+    public List<HierarchicalRelationProjection> hierarchicalStructure(final String externalId) {
+
+        return hierarchicalRelationRepository.hierarchicalStructure(externalId);
+//        switch (getRequestInformation().getAccessType()){
+//            case ALWAYS:
+//                return projectAccessAlwaysRepository.hierarchicalStructure(externalId);
+//            case ENTITY:
+//                return projectAccessEntityRepository.hierarchicalStructure(externalId);
+//            default:
+//                throw new ForbiddenException("The authenticated client is not permitted to perform the requested operation.");
+//        }
     }
 }

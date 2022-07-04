@@ -126,7 +126,7 @@ public class ProjectService {
 
         var ids=accessControlRepository.findByWhoAndCollection(tokenIntrospection.getJsonObject().getString(id),Collection.Project).stream().filter(projects ->
                 roleService.hasRoleAccess(projects.getRoles(), Collection.Project, Operation.READ)).map(projects -> projects.getEntity()).collect(Collectors.toList());
-        Bson query=queryParser.parseFile(json, false, ids);
+        Bson query=queryParser.parseFile(json, false, ids, Project.class);
 
         PanacheQuery<Project> projectionQuery = projectRepository.search(query,page,size);
         return new PageResource<>(projectionQuery, projectToJson(projectionQuery.list().stream().map(Project::getId).collect(Collectors.toList())), uriInfo);

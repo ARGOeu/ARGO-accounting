@@ -165,6 +165,9 @@ public abstract class AccessModulator<E extends Entity, I, A extends AccessContr
         return find(Document.parse(query.toBsonDocument().toJson())).page(Page.of(page, size));
     }
 
+    public PanacheQuery<E> search(Bson query) {
+        return find(Document.parse(query.toBsonDocument().toJson()));
+    }
     public PanacheQuery<E> fetchAll(List<String> ids, int page, int size) {
 
         Bson bson = Filters.in("_id", ids);
