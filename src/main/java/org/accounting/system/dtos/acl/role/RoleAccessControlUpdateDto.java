@@ -25,5 +25,5 @@ public class RoleAccessControlUpdateDto {
     )
     @JsonProperty("roles")
     @NotEmpty(message = "roles should have at least one entry.")
-    public Set<@Valid@NotFoundEntity(repository = RoleRepository.class, message = "There is no Role with the following id:") String> roles;
+    public Set<@Valid @NotFoundEntity(repository = RoleRepository.class, message = "There is no Role with the following id:") String> roles;
 }
