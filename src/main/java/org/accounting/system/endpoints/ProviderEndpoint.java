@@ -51,6 +51,8 @@ import java.util.List;
 
 import java.text.ParseException;
 
+import java.text.ParseException;
+
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY;
 
 @Path("/providers")
@@ -430,7 +432,6 @@ public class ProviderEndpoint {
     @Consumes(value = MediaType.APPLICATION_JSON)
 
     public Response search(
-
             @Valid @NotNull(message = "The request body is empty.") @RequestBody(content = @Content(
                     schema = @Schema(implementation = String.class),
                     mediaType = MediaType.APPLICATION_JSON,
@@ -493,20 +494,23 @@ public class ProviderEndpoint {
 //        return Response.ok().entity(response).build();
 //    }
 
-    public static class PageableProviderResponseDto extends PageResource<ProviderResponseDto> {
 
-        private List<ProviderResponseDto> content;
 
-        @Override
-        public List<ProviderResponseDto> getContent() {
-            return content;
-        }
+public static class PageableProviderResponseDto extends PageResource<ProviderResponseDto> {
 
-        @Override
-        public void setContent(List<ProviderResponseDto> content) {
-            this.content = content;
-        }
+    private List<ProviderResponseDto> content;
 
+    @Override
+    public List<ProviderResponseDto> getContent() {
+        return content;
     }
+
+    @Override
+    public void setContent(List<ProviderResponseDto> content) {
+        this.content = content;
+    }
+
 }
 
+
+}

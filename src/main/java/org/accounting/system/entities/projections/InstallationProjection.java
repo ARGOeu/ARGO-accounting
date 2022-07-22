@@ -30,6 +30,9 @@ public class InstallationProjection {
     public ObjectId getId() {
         return id;
     }
+    public String convertIdToStr(){
+        return  id.toString();
+    }
 
     public void setId(ObjectId id) {
         this.id = id;

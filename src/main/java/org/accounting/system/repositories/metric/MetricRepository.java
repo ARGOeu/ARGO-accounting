@@ -70,7 +70,7 @@ public class MetricRepository extends MetricModulator {
         return find("metricDefinitionId", Sort.by("metricDefinitionId"), metricDefinitionId).page(Page.of(page, size));
     }
 
-    public List<Metric> search(Bson query) {
-        return find(Document.parse(query.toBsonDocument().toJson())).stream().collect(Collectors.toList());
-    }
+//    public List<Metric> search(Bson query) {
+//        return find(Document.parse(query.toBsonDocument().toJson())).stream().collect(Collectors.toList());
+//    }
 }

@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters;
 import org.accounting.system.enums.Operand;
 import org.accounting.system.enums.Operator;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -17,11 +18,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class QueryParser {
 
-    public Bson parseFile(String json, boolean isAlwaysPermission, List<String> objectIds) throws ParseException, NoSuchFieldException {
+    public Bson parseFile(String json, boolean isAlwaysPermission, List<String> objectIds, Class entity) throws ParseException, NoSuchFieldException {
         if (json != null) {
             JSONParser parser = new JSONParser();
             JSONObject jsonObject = (JSONObject) parser.parse(json);
@@ -36,7 +38,7 @@ public class QueryParser {
 
             }
             if (!isAlwaysPermission) {
-                Bson accessFilter = accessFilter(filter, objectIds);
+                Bson accessFilter = accessFilter(filter, objectIds, entity);
                 return accessFilter;
             } else {
                 return filter;
@@ -166,17 +168,19 @@ public class QueryParser {
 
     }
 
-    public Bson accessFilter(Bson filter, List<String> ids) {
+    public Bson accessFilter(Bson filter, List<String> ids, Class entity) throws NoSuchFieldException {
 
-     //   List<ObjectId> objectIds=new ArrayList<>();
-//        for(String stId: ids){
-//
-//            objectIds.add(new ObjectId(stId));
-//        }
-        Bson accessFilter = Filters.in("_id", ids);
+        if(entity.getDeclaredField("id").getType().getName().equals(ObjectId.class.getName())){
+          var oids=  ids.stream().map(id-> new ObjectId(id)).collect(Collectors.toList());
+            Bson accessFilter = Filters.in("_id", oids);
 
-        Bson query = Filters.and(accessFilter, filter);
-        return query;
+           return Filters.and(accessFilter, filter);
+        }else{
+            Bson accessFilter = Filters.in("_id", ids);
+
+            return Filters.and(accessFilter, filter);
+
+        }
     }
 }
 

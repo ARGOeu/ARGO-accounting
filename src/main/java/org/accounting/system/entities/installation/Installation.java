@@ -70,4 +70,8 @@ public class Installation extends Entity {
     public void setProject(String project) {
         this.project = project;
     }
+
+    public String convertIdToStr(){
+        return this.id.toString();
+    }
 }

@@ -185,7 +185,7 @@ public class MetricDefinitionService {
         if(!isAlwaysPermission){
             entityIds= fetchAllMetricDefinitions().stream().map(MetricDefinitionResponseDto::getId).collect(Collectors.toList());
         }
-        Bson query=queryParser.parseFile(json, isAlwaysPermission, entityIds);
+        Bson query=queryParser.parseFile(json, isAlwaysPermission, entityIds, MetricDefinition.class);
         PanacheQuery<MetricDefinition> projectionQuery = metricDefinitionRepository.search(query,page,size);
         return new PageResource<>(projectionQuery, MetricDefinitionMapper.INSTANCE.metricDefinitionsToResponse(projectionQuery.list()), uriInfo);
 

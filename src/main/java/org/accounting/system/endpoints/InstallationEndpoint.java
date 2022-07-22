@@ -1,5 +1,6 @@
 package org.accounting.system.endpoints;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.quarkus.security.Authenticated;
 import org.accounting.system.constraints.AccessInstallation;
 import org.accounting.system.constraints.AccessProvider;
@@ -15,6 +16,7 @@ import org.accounting.system.dtos.metric.MetricRequestDto;
 import org.accounting.system.dtos.metric.MetricResponseDto;
 import org.accounting.system.dtos.metric.UpdateMetricRequestDto;
 import org.accounting.system.dtos.pagination.PageResource;
+import org.accounting.system.dtos.project.ProjectResponseDto;
 import org.accounting.system.entities.HierarchicalRelation;
 import org.accounting.system.entities.projections.MetricProjection;
 import org.accounting.system.enums.Collection;
@@ -32,8 +34,10 @@ import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeIn;
 import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
@@ -42,27 +46,18 @@ import org.jboss.resteasy.specimpl.ResteasyUriInfo;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.PATCH;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
+import java.text.ParseException;
 
-import static org.accounting.system.enums.Operation.ACL;
-import static org.accounting.system.enums.Operation.CREATE;
-import static org.accounting.system.enums.Operation.READ;
+import static org.accounting.system.enums.Operation.*;
 import static org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY;
 
 @Path("/installations")
@@ -156,7 +151,7 @@ public class InstallationEndpoint {
 
         var belongs = hierarchicalRelationService.providerBelongsToProject(installationRequestDto.project, installationRequestDto.organisation);
 
-        if(!belongs){
+        if (!belongs) {
             String message = String.format("There is no relationship between Project {%s} and Provider {%s}", installationRequestDto.project, installationRequestDto.organisation);
             throw new BadRequestException(message);
         }
@@ -218,7 +213,7 @@ public class InstallationEndpoint {
 
         var successResponse = new InformativeResponse();
 
-        if(success){
+        if (success) {
             successResponse.code = 200;
             successResponse.message = "Installation has been deleted successfully.";
         } else {
@@ -274,7 +269,7 @@ public class InstallationEndpoint {
                     example = "507f1f77bcf86cd799439011",
                     schema = @Schema(type = SchemaType.STRING))
             @PathParam("id") @Valid
-            @AccessInstallation(collection = Collection.Installation, operation = READ) String id){
+            @AccessInstallation(collection = Collection.Installation, operation = READ) String id) {
 
         var response = installationService.fetchInstallation(id);
 
@@ -347,7 +342,7 @@ public class InstallationEndpoint {
                     example = "507f1f77bcf86cd799439011",
                     schema = @Schema(type = SchemaType.STRING))
             @PathParam("id") @Valid
-            @AccessInstallation(collection = Collection.Installation, operation = Operation.UPDATE) String id, @Valid @NotNull(message = "The request body is empty.") UpdateInstallationRequestDto updateInstallationRequestDto){
+            @AccessInstallation(collection = Collection.Installation, operation = Operation.UPDATE) String id, @Valid @NotNull(message = "The request body is empty.") UpdateInstallationRequestDto updateInstallationRequestDto) {
 
         var response = installationService.update(id, updateInstallationRequestDto);
 
@@ -566,7 +561,7 @@ public class InstallationEndpoint {
             schema = @Schema(type = SchemaType.STRING))
                                         @PathParam("installation_id")
                                         @Valid
-                                        @AccessInstallation(collection = Collection.Installation, operation = ACL)  String installationId,
+                                        @AccessInstallation(collection = Collection.Installation, operation = ACL) String installationId,
                                         @Parameter(
                                                 description = "who is the client to whom the permissions have been granted.",
                                                 required = true,
@@ -628,13 +623,13 @@ public class InstallationEndpoint {
                     schema = @Schema(type = SchemaType.STRING))
             @PathParam("installation_id")
             @Valid
-            @AccessInstallation(collection = Collection.Installation, operation = ACL)  String installationId,
+            @AccessInstallation(collection = Collection.Installation, operation = ACL) String installationId,
             @Parameter(
                     description = "who is the client to whom the permissions have been granted.",
                     required = true,
                     example = "fbdb4e4a-6e93-4b08-a1e7-0b7bd08520a6",
                     schema = @Schema(type = SchemaType.STRING))
-            @PathParam("who") @Valid @NotFoundEntity(repository = ClientRepository.class, id = String.class, message = "There is no registered Client with the following id:") String who){
+            @PathParam("who") @Valid @NotFoundEntity(repository = ClientRepository.class, id = String.class, message = "There is no registered Client with the following id:") String who) {
 
         var storedInstallation = installationRepository.findById(new ObjectId(installationId));
 
@@ -685,12 +680,12 @@ public class InstallationEndpoint {
                     schema = @Schema(type = SchemaType.STRING))
             @PathParam("installation_id")
             @Valid
-            @AccessInstallation(collection = Collection.Installation, operation = ACL)  String installationId,
+            @AccessInstallation(collection = Collection.Installation, operation = ACL) String installationId,
             @Parameter(name = "page", in = QUERY,
                     description = "Indicates the page number. Page number must be >= 1.") @DefaultValue("1") @QueryParam("page") int page,
             @Parameter(name = "size", in = QUERY,
                     description = "The page size.") @DefaultValue("10") @QueryParam("size") int size,
-            @Context UriInfo uriInfo){
+            @Context UriInfo uriInfo) {
 
         if (page < 1) {
             throw new BadRequestException("Page number must be >= 1.");
@@ -852,18 +847,18 @@ public class InstallationEndpoint {
             @Valid
             @AccessInstallation(collection = Collection.Metric, operation = Operation.DELETE) String installationId,
             @Parameter(
-            description = "The Metric to be deleted.",
-            required = true,
-            example = "507f1f77bcf86cd799439011",
-            schema = @Schema(type = SchemaType.STRING))
-                           @PathParam("id") @Valid @NotFoundEntity(repository = MetricRepository.class, message = "There is no Metric with the following id:") String id) {
+                    description = "The Metric to be deleted.",
+                    required = true,
+                    example = "507f1f77bcf86cd799439011",
+                    schema = @Schema(type = SchemaType.STRING))
+            @PathParam("id") @Valid @NotFoundEntity(repository = MetricRepository.class, message = "There is no Metric with the following id:") String id) {
 
 
         boolean success = metricService.delete(id);
 
         var successResponse = new InformativeResponse();
 
-        if(success){
+        if (success) {
             successResponse.code = 200;
             successResponse.message = "Metric has been deleted successfully.";
         } else {
@@ -934,7 +929,7 @@ public class InstallationEndpoint {
                     required = true,
                     example = "61dbe3f10086512c9ff1197a",
                     schema = @Schema(type = SchemaType.STRING))
-            @PathParam("id") @Valid @NotFoundEntity(repository = MetricRepository.class, message = "There is no Metric with the following id:") String id, @Valid @NotNull(message = "The request body is empty.") UpdateMetricRequestDto updateMetricRequestDto){
+            @PathParam("id") @Valid @NotFoundEntity(repository = MetricRepository.class, message = "There is no Metric with the following id:") String id, @Valid @NotNull(message = "The request body is empty.") UpdateMetricRequestDto updateMetricRequestDto) {
 
         MetricResponseDto response = metricService.update(id, updateMetricRequestDto);
         return Response.ok().entity(response).build();
@@ -987,7 +982,7 @@ public class InstallationEndpoint {
                     required = true,
                     example = "507f1f77bcf86cd799439011",
                     schema = @Schema(type = SchemaType.STRING))
-            @PathParam("id") @Valid @NotFoundEntity(repository = MetricRepository.class, message = "There is no Metric with the following id:") String id){
+            @PathParam("id") @Valid @NotFoundEntity(repository = MetricRepository.class, message = "There is no Metric with the following id:") String id) {
 
         MetricResponseDto response = metricService.fetchMetric(id);
 
@@ -997,7 +992,7 @@ public class InstallationEndpoint {
     @Tag(name = "Metric")
     @org.eclipse.microprofile.openapi.annotations.Operation(
             summary = "Returns all Metrics under a specific Installation.",
-            description = "This operation is responsible for fetching all Metrics under a specific Installation. "+
+            description = "This operation is responsible for fetching all Metrics under a specific Installation. " +
                     "By passing the Project and Provider IDs to which the Installation belongs as well as the Installation ID, you can retrieve all Metrics that have been assigned to this specific Installation. By default, the first page of 10 Metrics will be returned. " +
                     "You can tune the default values by using the query parameters page and size.")
     @APIResponse(
@@ -1042,14 +1037,140 @@ public class InstallationEndpoint {
                     description = "The page size.") @DefaultValue("10") @QueryParam("size") int size,
             @Context UriInfo uriInfo) {
 
-        if(page <1){
+        if (page < 1) {
             throw new BadRequestException("Page number must be >= 1.");
         }
 
-        var response = installationService.fetchAllMetrics(installationId, page-1, size, uriInfo);
+        var response = installationService.fetchAllMetrics(installationId, page - 1, size, uriInfo);
 
         return Response.ok().entity(response).build();
     }
+
+
+    @Tag(name = "Search")
+    @org.eclipse.microprofile.openapi.annotations.Operation(
+            operationId = "search-project",
+            summary = "Searches a project",
+            description = "Search Project")
+
+    @APIResponse(
+            responseCode = "200",
+            description = "The corresponding Projects.",
+            content = @Content(schema = @Schema(
+                    type = SchemaType.STRING,
+                    implementation = ProjectResponseDto.class)))
+    @APIResponse(
+            responseCode = "400",
+            description = "Bad Request.",
+            content = @Content(schema = @Schema(
+                    type = SchemaType.OBJECT,
+                    implementation = InformativeResponse.class)))
+    @APIResponse(
+            responseCode = "401",
+            description = "Client has not been authenticated.",
+            content = @Content(schema = @Schema(
+                    type = SchemaType.OBJECT,
+                    implementation = InformativeResponse.class)))
+    @APIResponse(
+            responseCode = "403",
+            description = "The authenticated client is not permitted to perform the requested operation.",
+            content = @Content(schema = @Schema(
+                    type = SchemaType.OBJECT,
+                    implementation = InformativeResponse.class)))
+    @APIResponse(
+            responseCode = "415",
+            description = "Cannot consume content type.",
+            content = @Content(schema = @Schema(
+                    type = SchemaType.OBJECT,
+                    implementation = InformativeResponse.class)))
+    @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Errors.",
+            content = @Content(schema = @Schema(
+                    type = SchemaType.OBJECT,
+                    implementation = InformativeResponse.class)))
+    @SecurityRequirement(name = "Authentication")
+
+    @POST
+    @Path("/search")
+    @Produces(value = MediaType.APPLICATION_JSON)
+    @Consumes(value = MediaType.APPLICATION_JSON)
+
+    public Response search(
+            @NotEmpty(message = "The request body is empty.") @RequestBody(content = @Content(
+                    schema = @Schema(implementation = String.class),
+                    mediaType = MediaType.APPLICATION_JSON,
+                    examples = {
+                            @ExampleObject(
+                                    name = "An example request of a search on installations",
+                                    value = "{\n" +
+                                            "            \"type\":\"query\",\n" +
+                                            "            \"field\": \"installation\",\n" +
+                                            "            \"values\": \"GRNET-KNS-3\",\n" +
+                                            "            \"operand\": \"eq\"          \n" +
+                                            "\n" +
+                                            "}",
+                                    summary = "A simple search on Installations "),
+                            @ExampleObject(
+                                    name = "An example request of a complex search on installations",
+                                    value = "\n" +
+                                            "{\n" +
+                                            "  \"type\": \"filter\",\n" +
+                                            "  \"operator\": \"OR\",\n" +
+                                            "  \"criteria\": [\n" +
+                                            " \n" +
+                                            "    {\n" +
+                                            "      \"type\": \"filter\",\n" +
+                                            "      \"operator\": \"OR\",\n" +
+                                            "      \"criteria\": [{\n" +
+                                            "            \"type\":\"query\",\n" +
+                                            "            \"field\": \"installation\",\n" +
+                                            "            \"values\": \"GRNET-KNS-3\",\n" +
+                                            "            \"operand\": \"eq\"          \n" +
+                                            "\n" +
+                                            "},{\n" +
+                                            "            \"type\":\"query\",\n" +
+                                            "            \"field\": \"organisation\",\n" +
+                                            "            \"values\": \"grnet\",\n" +
+                                            "            \"operand\": \"eq\"          \n" +
+                                            "\n" +
+                                            "}]\n" +
+                                            "    }]}",
+                                    summary = "A complex search on Installations ")})
+            ) String json,
+            @Parameter(name = "page", in = QUERY,
+                    description = "Indicates the page number. Page number must be >= 1.") @DefaultValue("1") @QueryParam("page") int page,
+            @Parameter(name = "size", in = QUERY,
+                    description = "The page size.") @DefaultValue("10") @QueryParam("size") int size,
+            @Context UriInfo uriInfo
+    ) throws ParseException, NoSuchFieldException, org.json.simple.parser.ParseException, JsonProcessingException {
+
+        if (page < 1) {
+            throw new BadRequestException("Page number must be >= 1.");
+        }
+        if (json.equals("")) {
+            throw new BadRequestException("not empty body permitted");
+        }
+        var results = installationService.searchInstallation(json, page - 1, size, uriInfo);
+
+
+        return Response.ok().entity(results).build();
+
+
+//        var  response =results.content.stream().map(ProjectResponseDto::getId).collect(Collectors.toList()).stream().map(installationService::hierarchicalStructure).collect(Collectors.toList());
+//
+//
+//        PageResource<Project, List<HierarchicalRelationProjection>> pageResource=new PageResource<>();
+//        pageResource.content=response;
+//        pageResource.sizeOfPage=results.sizeOfPage;
+//        pageResource.numberOfPage=results.numberOfPage;
+//        pageResource.totalPages=results.totalPages;
+//        pageResource.links=results.links;
+//        pageResource.totalElements=results.totalElements;
+//
+
+    }
+
 
     public static class PageableMetricProjection extends PageResource<MetricProjection> {
 
@@ -1064,5 +1185,6 @@ public class InstallationEndpoint {
         public void setContent(List<MetricProjection> content) {
             this.content = content;
         }
+
     }
 }

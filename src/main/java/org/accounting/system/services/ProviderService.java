@@ -1,6 +1,7 @@
 package org.accounting.system.services;
 
 import io.quarkus.mongodb.panache.PanacheQuery;
+import io.quarkus.oidc.TokenIntrospection;
 import org.accounting.system.dtos.installation.InstallationResponseDto;
 import org.accounting.system.dtos.pagination.PageResource;
 import org.accounting.system.dtos.provider.ProviderRequestDto;
@@ -16,6 +17,7 @@ import org.accounting.system.mappers.InstallationMapper;
 import org.accounting.system.mappers.ProviderMapper;
 import org.accounting.system.repositories.HierarchicalRelationRepository;
 import org.accounting.system.repositories.provider.ProviderRepository;
+import org.accounting.system.services.authorization.RoleService;
 import org.accounting.system.util.QueryParser;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.conversions.Bson;
@@ -26,7 +28,9 @@ import javax.inject.Inject;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.UriInfo;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ProviderService {
@@ -40,6 +44,10 @@ public class ProviderService {
     @Inject
     HierarchicalRelationService hierarchicalRelationService;
 
+    @Inject
+    TokenIntrospection tokenIntrospection;
+    @Inject
+    RoleService roleService;
     @Inject
     QueryParser queryParser;
     @ConfigProperty(name = "key.to.retrieve.id.from.access.token")
@@ -190,7 +198,6 @@ public class ProviderService {
 
         return new PageResource<>(projectionQuery, InstallationMapper.INSTANCE.installationProjectionsToResponse(projectionQuery.list), uriInfo);
     }
-
     public  PageResource< ProviderResponseDto> searchProvider(String json, int page, int size, UriInfo uriInfo) throws  NoSuchFieldException, org.json.simple.parser.ParseException {
 
         Bson query=queryParser.parseFile(json);
